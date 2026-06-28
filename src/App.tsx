@@ -1,6 +1,12 @@
 import { useMemo, useState } from "react";
-import { decodeFunctionResult, encodeDeployData, encodeFunctionData, parseAbi } from "viem";
-import { buildTransaction, createShellProvider, decryptKeystore } from "shell-sdk";
+import { parseAbi } from "viem";
+import { createShellProvider, decryptKeystore } from "shell-sdk";
+import {
+  deployContract,
+  readContract,
+  writeContract,
+  type ShellContractArtifact,
+} from "shell-sdk/contracts";
 
 const ABI = parseAbi([
   "constructor(string name,string symbol)",
@@ -17,28 +23,6 @@ type LogEntry = {
 };
 
 const DEFAULT_BYTECODE_PLACEHOLDER = "Run npm run compile, then paste artifacts/ShellNft.compiled.json bytecode here.";
-
-async function rpcRequest<T>(rpcUrl: string, method: string, params: unknown[]): Promise<T> {
-  const response = await fetch(rpcUrl, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
-  });
-  if (!response.ok) throw new Error(`RPC HTTP ${response.status}`);
-  const body = await response.json();
-  if (body.error) throw new Error(`[${body.error.code}] ${body.error.message}`);
-  return body.result as T;
-}
-
-async function waitForReceipt(rpcUrl: string, txHash: string): Promise<Record<string, any>> {
-  const deadline = Date.now() + 180_000;
-  while (Date.now() < deadline) {
-    const receipt = await rpcRequest<Record<string, any> | null>(rpcUrl, "eth_getTransactionReceipt", [txHash]);
-    if (receipt) return receipt;
-    await new Promise((resolve) => setTimeout(resolve, 2_000));
-  }
-  throw new Error(`Timed out waiting for ${txHash}`);
-}
 
 function assertShellAddress(value: string, fieldName: string): `0x${string}` {
   if (!/^0x[0-9a-fA-F]{64}$/.test(value)) {
@@ -73,27 +57,6 @@ export default function App() {
     return decryptKeystore(keystore, password);
   }
 
-  async function sendTx(to: string | null, data: `0x${string}`, gasLimit: number, includePublicKey = false) {
-    const signer = await getSigner();
-    const from = signer.getAddress();
-    const nonceHex = await rpcRequest<string>(rpcUrl, "eth_getTransactionCount", [from, "pending"]);
-    const tx = buildTransaction({
-      chainId: Number(chainId),
-      nonce: Number(BigInt(nonceHex)),
-      to,
-      data,
-      gasLimit,
-      maxFeePerGas: 2_000_000_000,
-      maxPriorityFeePerGas: 200_000_000,
-    });
-    const provider = createShellProvider({ rpcHttpUrl: rpcUrl });
-    const signed = await signer.buildSignedTransaction({ tx, includePublicKey });
-    const hash = await provider.sendTransaction(signed);
-    const receipt = await waitForReceipt(rpcUrl, hash);
-    if (receipt.status !== "0x1") throw new Error(`Transaction reverted: ${hash}`);
-    return { hash, receipt, from };
-  }
-
   async function run<T>(label: string, fn: () => Promise<T>) {
     setBusy(true);
     log("info", label);
@@ -112,51 +75,63 @@ export default function App() {
   async function deploy() {
     await run("Deploying ShellNft", async () => {
       if (!bytecode.trim().startsWith("0x")) throw new Error(DEFAULT_BYTECODE_PLACEHOLDER);
-      const data = encodeDeployData({
+      const provider = createShellProvider({ rpcHttpUrl: rpcUrl });
+      const signer = await getSigner();
+      const artifact: ShellContractArtifact = {
+        contractName: "ShellNft",
         abi: ABI,
         bytecode: bytecode.trim() as `0x${string}`,
-        args: ["Shell Tutorial NFT", "SNFT"],
+      };
+      const result = await deployContract({
+        provider,
+        signer,
+        chainId: Number(chainId),
+        artifact,
+        constructorArgs: ["Shell Tutorial NFT", "SNFT"],
+        gasLimit: 1_800_000,
+        includePublicKey: true,
+        wait: true,
+        timeoutMs: 180_000,
       });
-      const { hash, receipt } = await sendTx(null, data, 1_800_000, true);
-      if (!receipt.contractAddress) throw new Error("Missing contractAddress in deploy receipt");
-      setContractAddress(receipt.contractAddress);
-      log("ok", `deploy tx ${hash}`);
-      log("ok", `contract ${receipt.contractAddress}`);
+      if (!result.contractAddress) throw new Error("Missing contractAddress in deploy receipt");
+      setContractAddress(result.contractAddress);
+      log("ok", `deploy tx ${result.hash}`);
+      log("ok", `contract ${result.contractAddress}`);
     });
   }
 
   async function mint() {
     await run("Minting NFT", async () => {
       const signer = await getSigner();
+      const provider = createShellProvider({ rpcHttpUrl: rpcUrl });
       const to = assertShellAddress(signer.getAddress(), "owner");
-      const data = encodeFunctionData({ abi: ABI, functionName: "mint", args: [to, tokenUri] });
-      const { hash } = await sendTx(assertShellAddress(contractAddress, "contractAddress"), data, 180_000);
-      log("ok", `mint tx ${hash}`);
+      const result = await writeContract({
+        provider,
+        signer,
+        chainId: Number(chainId),
+        address: assertShellAddress(contractAddress, "contractAddress"),
+        abi: ABI,
+        functionName: "mint",
+        args: [to, tokenUri],
+        gasLimit: 180_000,
+        wait: true,
+        timeoutMs: 180_000,
+      });
+      log("ok", `mint tx ${result.hash}`);
     });
   }
 
   async function read() {
     await run("Reading NFT", async () => {
       const contract = assertShellAddress(contractAddress, "contractAddress");
+      const provider = createShellProvider({ rpcHttpUrl: rpcUrl });
       const id = BigInt(tokenId || "1");
-      const totalHex = await rpcRequest<`0x${string}`>(rpcUrl, "eth_call", [
-        { to: contract, data: encodeFunctionData({ abi: ABI, functionName: "totalSupply", args: [] }) },
-        "latest",
-      ]);
-      const ownerHex = await rpcRequest<`0x${string}`>(rpcUrl, "eth_call", [
-        { to: contract, data: encodeFunctionData({ abi: ABI, functionName: "ownerOf", args: [id] }) },
-        "latest",
-      ]);
-      const uriHex = await rpcRequest<`0x${string}`>(rpcUrl, "eth_call", [
-        { to: contract, data: encodeFunctionData({ abi: ABI, functionName: "tokenURI", args: [id] }) },
-        "latest",
-      ]);
-      const total = decodeFunctionResult({ abi: ABI, functionName: "totalSupply", data: totalHex });
-      const owner = decodeFunctionResult({ abi: ABI, functionName: "ownerOf", data: ownerHex });
-      const uri = decodeFunctionResult({ abi: ABI, functionName: "tokenURI", data: uriHex });
-      setLastSupply(total.toString());
-      setLastOwner(owner);
-      setLastUri(uri);
+      const total = await readContract({ provider, address: contract, abi: ABI, functionName: "totalSupply" });
+      const owner = await readContract({ provider, address: contract, abi: ABI, functionName: "ownerOf", args: [id] });
+      const uri = await readContract({ provider, address: contract, abi: ABI, functionName: "tokenURI", args: [id] });
+      setLastSupply(String(total));
+      setLastOwner(String(owner));
+      setLastUri(String(uri));
     });
   }
 

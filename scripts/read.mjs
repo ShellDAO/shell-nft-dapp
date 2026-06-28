@@ -1,15 +1,9 @@
 import { readFile } from "node:fs/promises";
-import {
-  decodeOwnerOf,
-  decodeTokenUri,
-  decodeTotalSupply,
-  encodeOwnerOf,
-  encodeTokenUri,
-  encodeTotalSupply,
-} from "./lib/contract.mjs";
+import { createShellProvider } from "shell-sdk";
+import { readContract } from "shell-sdk/contracts";
+import { shellNftAbi } from "./lib/contract.mjs";
 import { readConfig } from "./lib/env.mjs";
 import { deploymentPath } from "./lib/paths.mjs";
-import { ethCall } from "./lib/rpc.mjs";
 
 async function resolveContractAddress(config) {
   if (config.contractAddress) return config.contractAddress;
@@ -20,9 +14,27 @@ async function resolveContractAddress(config) {
 export async function readShellNft({ tokenId = 1n } = {}) {
   const config = await readConfig();
   const contractAddress = await resolveContractAddress(config);
-  const totalSupply = decodeTotalSupply(await ethCall(config.rpcUrl, contractAddress, encodeTotalSupply()));
-  const owner = decodeOwnerOf(await ethCall(config.rpcUrl, contractAddress, encodeOwnerOf(tokenId)));
-  const tokenUri = decodeTokenUri(await ethCall(config.rpcUrl, contractAddress, encodeTokenUri(tokenId)));
+  const provider = createShellProvider({ rpcHttpUrl: config.rpcUrl });
+  const totalSupply = await readContract({
+    provider,
+    address: contractAddress,
+    abi: shellNftAbi,
+    functionName: "totalSupply",
+  });
+  const owner = await readContract({
+    provider,
+    address: contractAddress,
+    abi: shellNftAbi,
+    functionName: "ownerOf",
+    args: [BigInt(tokenId)],
+  });
+  const tokenUri = await readContract({
+    provider,
+    address: contractAddress,
+    abi: shellNftAbi,
+    functionName: "tokenURI",
+    args: [BigInt(tokenId)],
+  });
   return { contractAddress, tokenId: BigInt(tokenId), totalSupply, owner, tokenUri };
 }
 

@@ -1,4 +1,5 @@
-import { decodeFunctionResult, encodeDeployData, encodeFunctionData, parseAbi } from "viem";
+import { encodeFunctionData, decodeFunctionResult } from "shell-sdk/contracts";
+import { parseAbi } from "viem";
 
 export const shellNftAbi = parseAbi([
   "constructor(string name,string symbol)",
@@ -16,14 +17,6 @@ export function assertShellBytes32(value, fieldName = "value") {
     throw new Error(`${fieldName} must be a 32-byte Shell hex value (0x + 64 hex chars)`);
   }
   return value.toLowerCase();
-}
-
-export function buildDeployData(bytecode, name = "Shell Tutorial NFT", symbol = "SNFT") {
-  return encodeDeployData({
-    abi: shellNftAbi,
-    bytecode,
-    args: [name, symbol],
-  });
 }
 
 export function encodeMint(to, uri) {
