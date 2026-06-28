@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  assertShellBytes32,
+  assertShellAddress,
   decodeOwnerOf,
   decodeTokenUri,
   decodeTotalSupply,
@@ -13,9 +13,9 @@ import {
 
 const owner = `0x${"11".repeat(32)}`;
 
-test("Shell-native owner values must be 32-byte hex", () => {
-  assert.equal(assertShellBytes32(owner), owner);
-  assert.throws(() => assertShellBytes32(`0x${"11".repeat(20)}`), /32-byte Shell/);
+test("Shell address ABI values must be 32-byte hex at the SDK boundary", () => {
+  assert.equal(assertShellAddress(owner), owner);
+  assert.throws(() => assertShellAddress(`0x${"11".repeat(20)}`), /32-byte Shell/);
 });
 
 test("ABI helpers encode Shell NFT calls", () => {
