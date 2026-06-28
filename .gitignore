@@ -1,0 +1,11 @@
+node_modules/
+dist/
+artifacts/
+deployments/
+.env
+.env.*
+!.env.example
+*.keystore.json
+keystore.json
+npm-debug.log*
+.DS_Store

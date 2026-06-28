@@ -1,0 +1,213 @@
+:root {
+  color: #18201d;
+  background: #f5f7f4;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+.app-shell {
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgba(39, 90, 76, 0.08), rgba(245, 247, 244, 0) 42%),
+    #f5f7f4;
+  padding: 32px;
+}
+
+.workspace {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 32px;
+  line-height: 1.1;
+}
+
+h2 {
+  font-size: 16px;
+  margin-bottom: 16px;
+}
+
+.topbar p {
+  color: #5a635f;
+  margin-top: 8px;
+}
+
+.status {
+  border: 1px solid #b7c4bd;
+  border-radius: 999px;
+  color: #285848;
+  padding: 7px 12px;
+  min-width: 76px;
+  text-align: center;
+  background: #ffffff;
+}
+
+.status.busy {
+  color: #6d4c12;
+  border-color: #d7b35f;
+  background: #fff7df;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.panel {
+  background: #ffffff;
+  border: 1px solid #d8dfda;
+  border-radius: 8px;
+  padding: 20px;
+  min-width: 0;
+}
+
+label {
+  display: grid;
+  gap: 7px;
+  color: #39433f;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+input,
+textarea {
+  width: 100%;
+  border: 1px solid #bfc9c3;
+  border-radius: 6px;
+  color: #17201c;
+  background: #fbfcfb;
+  padding: 10px 11px;
+  outline: none;
+}
+
+textarea {
+  resize: vertical;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+input:focus,
+textarea:focus {
+  border-color: #2f7d63;
+  box-shadow: 0 0 0 3px rgba(47, 125, 99, 0.14);
+}
+
+.button-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+button {
+  border: 0;
+  border-radius: 6px;
+  background: #255f4d;
+  color: #ffffff;
+  cursor: pointer;
+  min-height: 40px;
+  padding: 0 16px;
+  font-weight: 700;
+}
+
+button:disabled {
+  background: #aeb8b2;
+  cursor: not-allowed;
+}
+
+.results {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 10px 12px;
+  margin: 18px 0 0;
+  font-size: 13px;
+}
+
+.results dt {
+  color: #66716c;
+}
+
+.results dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: "SFMono-Regular", Consolas, monospace;
+}
+
+.log-panel {
+  min-height: 320px;
+}
+
+.logs {
+  display: grid;
+  gap: 8px;
+}
+
+.log {
+  border-left: 3px solid #97a49e;
+  background: #f7f9f8;
+  padding: 9px 10px;
+  overflow-wrap: anywhere;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 12px;
+}
+
+.log.ok {
+  border-color: #2f7d63;
+}
+
+.log.error {
+  border-color: #b33b3b;
+  background: #fff3f1;
+}
+
+.muted {
+  color: #6d7772;
+}
+
+@media (max-width: 780px) {
+  .app-shell {
+    padding: 20px;
+  }
+
+  .topbar {
+    flex-direction: column;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
