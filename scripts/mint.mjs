@@ -1,8 +1,10 @@
 import { readFile } from "node:fs/promises";
-import { encodeMint } from "./lib/contract.mjs";
+import { createShellProvider } from "shell-sdk";
+import { writeContract } from "shell-sdk/contracts";
+import { shellNftAbi } from "./lib/contract.mjs";
 import { readConfig } from "./lib/env.mjs";
 import { deploymentPath } from "./lib/paths.mjs";
-import { loadSigner, sendShellTransaction } from "./lib/wallet.mjs";
+import { loadSigner } from "./lib/wallet.mjs";
 
 async function resolveContractAddress(config) {
   if (config.contractAddress) return config.contractAddress;
@@ -14,16 +16,20 @@ export async function mintShellNft({ tokenUri } = {}) {
   const config = await readConfig();
   const signer = await loadSigner(config);
   const owner = signer.getAddress();
+  const provider = createShellProvider({ rpcHttpUrl: config.rpcUrl });
   const contractAddress = await resolveContractAddress(config);
   const uri = tokenUri ?? `${config.baseUri}shell-nft-1.json`;
-  const data = encodeMint(owner, uri);
-  const { hash, receipt } = await sendShellTransaction({
-    rpcUrl: config.rpcUrl,
+  const { hash, receipt } = await writeContract({
+    provider,
     chainId: config.chainId,
     signer,
-    to: contractAddress,
-    data,
+    address: contractAddress,
+    abi: shellNftAbi,
+    functionName: "mint",
+    args: [owner, uri],
     gasLimit: 180_000,
+    wait: true,
+    timeoutMs: 180_000,
   });
   return { hash, receipt, owner, tokenUri: uri, contractAddress };
 }

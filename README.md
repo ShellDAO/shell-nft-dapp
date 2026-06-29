@@ -2,7 +2,16 @@
 
 A reproducible Shell-native NFT dApp for testing Shell Chain smart contract deployment and interaction.
 
-This project intentionally uses a Shell-native NFT contract instead of claiming ERC-721 compatibility. Shell Chain canonical addresses are 32-byte `0x` values, while ERC-721 assumes 20-byte `address` values.
+This project intentionally uses a Shell-native NFT contract with Solidity
+`address` owners. Shell Chain canonical addresses are 32-byte `0x` values; the
+Shell SDK contract helpers encode and decode Solidity `address` ABI values as
+Shell addresses for this chain.
+
+The scripts and browser UI use the public `shell-sdk/contracts` APIs for
+compile, deploy, write, read, and receipt handling. The workspace dependency is
+`file:../shell-sdk` so the tutorial always exercises the SDK currently under
+development; after the SDK is published, replace it with the published version
+range.
 
 ## Prerequisites
 
@@ -50,6 +59,8 @@ npm run smoke
 ```
 
 The smoke test deploys `ShellNft`, mints token `1` to the signer address, then verifies `totalSupply`, `ownerOf(1)`, and `tokenURI(1)` through `eth_call`.
+All of those actions go through `shell-sdk/contracts` rather than local
+transaction-building or ABI plumbing.
 
 Individual commands:
 

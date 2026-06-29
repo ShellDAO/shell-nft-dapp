@@ -1,8 +1,8 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { buildTransaction, createShellProvider, decryptKeystore } from "shell-sdk";
+import { decryptKeystore } from "shell-sdk";
 import { repoRoot } from "./paths.mjs";
-import { rpcRequest, waitForReceipt } from "./rpc.mjs";
+import { rpcRequest } from "./rpc.mjs";
 
 export async function loadSigner(config) {
   if (!config.keystorePassword) {
@@ -28,37 +28,4 @@ export async function getBalance(rpcUrl, address) {
 export async function getChainId(rpcUrl) {
   const chainIdHex = await rpcRequest(rpcUrl, "eth_chainId", []);
   return Number(BigInt(chainIdHex));
-}
-
-export async function sendShellTransaction({
-  rpcUrl,
-  chainId,
-  signer,
-  to,
-  data,
-  gasLimit,
-  value = 0n,
-  includePublicKey = false,
-  maxFeePerGas = 2_000_000_000,
-  maxPriorityFeePerGas = 200_000_000,
-}) {
-  const provider = createShellProvider({ rpcHttpUrl: rpcUrl });
-  const nonce = await getPendingNonce(rpcUrl, signer.getAddress());
-  const tx = buildTransaction({
-    chainId,
-    nonce,
-    to,
-    value,
-    data,
-    gasLimit,
-    maxFeePerGas,
-    maxPriorityFeePerGas,
-  });
-  const signed = await signer.buildSignedTransaction({ tx, includePublicKey });
-  const hash = await provider.sendTransaction(signed);
-  const receipt = await waitForReceipt(rpcUrl, hash);
-  if (receipt.status !== "0x1") {
-    throw new Error(`transaction reverted: ${hash}`);
-  }
-  return { hash, receipt, nonce };
 }
