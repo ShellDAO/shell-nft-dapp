@@ -25,11 +25,23 @@ export async function loadDotEnv(filePath = path.join(repoRoot, ".env")) {
   }
 }
 
+export function parseChainId(value, fieldName = "SHELL_CHAIN_ID") {
+  const text = String(value ?? "").trim();
+  if (!/^[1-9][0-9]*$/.test(text)) {
+    throw new Error(`${fieldName} must be a positive decimal integer`);
+  }
+  const chainId = Number(text);
+  if (!Number.isSafeInteger(chainId)) {
+    throw new Error(`${fieldName} must be a safe JavaScript integer`);
+  }
+  return chainId;
+}
+
 export async function readConfig() {
   await loadDotEnv();
   return {
     rpcUrl: process.env.SHELL_RPC_URL ?? "http://127.0.0.1:8545",
-    chainId: Number(process.env.SHELL_CHAIN_ID ?? "1337"),
+    chainId: parseChainId(process.env.SHELL_CHAIN_ID ?? "1337"),
     keystorePath: process.env.SHELL_KEYSTORE_PATH ?? "./keystore.json",
     keystorePassword: process.env.SHELL_KEYSTORE_PASSWORD ?? "",
     baseUri: process.env.NFT_BASE_URI ?? "ipfs://example/",
