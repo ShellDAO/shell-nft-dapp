@@ -7,9 +7,22 @@ export async function rpcRequest(url, method, params) {
   if (!response.ok) {
     throw new Error(`rpc request failed: ${response.status} ${response.statusText}`);
   }
-  const body = await response.json();
+  let body;
+  try {
+    body = await response.json();
+  } catch {
+    throw new Error("rpc response was not valid JSON");
+  }
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    throw new Error("rpc response must be a JSON-RPC object");
+  }
   if (body.error) {
-    throw new Error(`rpc error [${body.error.code}] ${body.error.message}`);
+    const code = body.error.code ?? "unknown";
+    const message = body.error.message ?? "unknown error";
+    throw new Error(`rpc error [${code}] ${message}`);
+  }
+  if (!Object.hasOwn(body, "result")) {
+    throw new Error("rpc response missing result");
   }
   return body.result;
 }
