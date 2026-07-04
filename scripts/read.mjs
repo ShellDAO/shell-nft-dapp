@@ -1,15 +1,8 @@
-import { readFile } from "node:fs/promises";
 import { createShellProvider } from "shell-sdk";
 import { readContract } from "shell-sdk/contracts";
 import { parseTokenId, shellNftAbi } from "./lib/contract.mjs";
+import { resolveContractAddress } from "./lib/deployment.mjs";
 import { readConfig } from "./lib/env.mjs";
-import { deploymentPath } from "./lib/paths.mjs";
-
-async function resolveContractAddress(config) {
-  if (config.contractAddress) return config.contractAddress;
-  const deployment = JSON.parse(await readFile(deploymentPath, "utf8"));
-  return deployment.contractAddress;
-}
 
 export async function readShellNft({ tokenId = 1n } = {}) {
   const config = await readConfig();
