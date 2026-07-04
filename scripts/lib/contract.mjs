@@ -19,6 +19,18 @@ export function assertShellAddress(value, fieldName = "value") {
   return value.toLowerCase();
 }
 
+export function parseTokenId(value, fieldName = "tokenId") {
+  if (typeof value === "bigint") {
+    if (value < 0n) throw new Error(`${fieldName} must be a non-negative integer`);
+    return value;
+  }
+  const text = String(value ?? "").trim();
+  if (!/^(0|[1-9][0-9]*)$/.test(text)) {
+    throw new Error(`${fieldName} must be a non-negative decimal integer`);
+  }
+  return BigInt(text);
+}
+
 export function encodeMint(to, uri) {
   return encodeFunctionData({
     abi: shellNftAbi,
@@ -31,7 +43,7 @@ export function encodeOwnerOf(tokenId) {
   return encodeFunctionData({
     abi: shellNftAbi,
     functionName: "ownerOf",
-    args: [BigInt(tokenId)],
+    args: [parseTokenId(tokenId)],
   });
 }
 
@@ -39,7 +51,7 @@ export function encodeTokenUri(tokenId) {
   return encodeFunctionData({
     abi: shellNftAbi,
     functionName: "tokenURI",
-    args: [BigInt(tokenId)],
+    args: [parseTokenId(tokenId)],
   });
 }
 

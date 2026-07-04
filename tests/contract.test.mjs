@@ -9,6 +9,7 @@ import {
   encodeOwnerOf,
   encodeTokenUri,
   encodeTotalSupply,
+  parseTokenId,
 } from "../scripts/lib/contract.mjs";
 
 const owner = `0x${"11".repeat(32)}`;
@@ -21,8 +22,23 @@ test("Shell address ABI values must be 32-byte hex at the SDK boundary", () => {
 test("ABI helpers encode Shell NFT calls", () => {
   assert.match(encodeMint(owner, "ipfs://example/1.json"), /^0x/);
   assert.match(encodeOwnerOf(1n), /^0x/);
+  assert.match(encodeOwnerOf("42"), /^0x/);
   assert.match(encodeTokenUri(1n), /^0x/);
   assert.match(encodeTotalSupply(), /^0x/);
+});
+
+test("parseTokenId accepts non-negative decimal ids only", () => {
+  assert.equal(parseTokenId(0n), 0n);
+  assert.equal(parseTokenId(" 42 "), 42n);
+  assert.throws(() => parseTokenId(""), /non-negative decimal integer/);
+  assert.throws(() => parseTokenId("-1"), /non-negative decimal integer/);
+  assert.throws(() => parseTokenId("1.5"), /non-negative decimal integer/);
+  assert.throws(() => parseTokenId(-1n), /non-negative integer/);
+});
+
+test("ABI helpers reject malformed token ids before encoding", () => {
+  assert.throws(() => encodeOwnerOf(""), /tokenId/);
+  assert.throws(() => encodeTokenUri("-1"), /tokenId/);
 });
 
 test("ABI helpers decode Shell NFT read results", () => {

@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { createShellProvider } from "shell-sdk";
 import { readContract } from "shell-sdk/contracts";
-import { shellNftAbi } from "./lib/contract.mjs";
+import { parseTokenId, shellNftAbi } from "./lib/contract.mjs";
 import { readConfig } from "./lib/env.mjs";
 import { deploymentPath } from "./lib/paths.mjs";
 
@@ -15,6 +15,7 @@ export async function readShellNft({ tokenId = 1n } = {}) {
   const config = await readConfig();
   const contractAddress = await resolveContractAddress(config);
   const provider = createShellProvider({ rpcHttpUrl: config.rpcUrl });
+  const parsedTokenId = parseTokenId(tokenId);
   const totalSupply = await readContract({
     provider,
     address: contractAddress,
@@ -26,20 +27,20 @@ export async function readShellNft({ tokenId = 1n } = {}) {
     address: contractAddress,
     abi: shellNftAbi,
     functionName: "ownerOf",
-    args: [BigInt(tokenId)],
+    args: [parsedTokenId],
   });
   const tokenUri = await readContract({
     provider,
     address: contractAddress,
     abi: shellNftAbi,
     functionName: "tokenURI",
-    args: [BigInt(tokenId)],
+    args: [parsedTokenId],
   });
-  return { contractAddress, tokenId: BigInt(tokenId), totalSupply, owner, tokenUri };
+  return { contractAddress, tokenId: parsedTokenId, totalSupply, owner, tokenUri };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const tokenId = process.argv[2] ? BigInt(process.argv[2]) : 1n;
+  const tokenId = process.argv[2] ? parseTokenId(process.argv[2]) : 1n;
   const result = await readShellNft({ tokenId });
   console.log(`contract: ${result.contractAddress}`);
   console.log(`totalSupply: ${result.totalSupply.toString()}`);
