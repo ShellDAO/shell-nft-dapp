@@ -2,10 +2,14 @@
 
 A reproducible Shell-native NFT dApp for testing Shell Chain smart contract deployment and interaction.
 
-This project intentionally uses a Shell-native NFT contract with Solidity
-`address` owners. Shell Chain canonical addresses are 32-byte `0x` values; the
-Shell SDK contract helpers encode and decode Solidity `address` ABI values as
-Shell addresses for this chain.
+This example stores Shell-native owners as Solidity `bytes32`, preserving all
+32 bytes of their canonical address. Standard Solidity `address` is 20 bytes;
+SDK encoding cannot widen the compiler's address decoder or storage layout.
+The contract targets Cancun instructions supported by the node.
+
+The example ABI uses `mint(bytes32,string)`, `ownerOf(uint256) returns (bytes32)`
+and `TransferShell(bytes32,bytes32,uint256)`. Redeploy the example after this ABI
+change; contracts compiled with the earlier `address` owner ABI are incompatible.
 
 The scripts and browser UI use the public `shell-sdk/contracts` APIs for
 compile, deploy, write, read, and receipt handling. The lockfile installs the
@@ -78,6 +82,8 @@ npm run smoke
 The smoke test deploys `ShellNft`, mints token `1` to the signer address, then verifies `totalSupply`, `ownerOf(1)`, and `tokenURI(1)` through `eth_call`.
 All of those actions go through `shell-sdk/contracts` rather than local
 transaction-building or ABI plumbing.
+The smoke run also checks the full owner in the mint event, rejects empty-URI
+and zero-owner mints, and verifies that those failures preserve NFT state.
 
 Individual commands:
 

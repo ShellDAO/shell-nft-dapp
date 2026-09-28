@@ -6,6 +6,7 @@ export async function compileShellNft({ write = true, outputPath = artifactPath 
   const artifact = await compileSolidity({
     sources: [{ path: "contracts/ShellNft.sol", content: await readFile(contractPath, "utf8") }],
     contractName: "ShellNft",
+    evmVersion: "cancun",
   });
   if (write) {
     await saveContractArtifact(outputPath, artifact);
