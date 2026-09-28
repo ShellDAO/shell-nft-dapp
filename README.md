@@ -8,10 +8,27 @@ Shell SDK contract helpers encode and decode Solidity `address` ABI values as
 Shell addresses for this chain.
 
 The scripts and browser UI use the public `shell-sdk/contracts` APIs for
-compile, deploy, write, read, and receipt handling. The workspace dependency is
-`file:../shell-sdk` so the tutorial always exercises the SDK currently under
-development; after the SDK is published, replace it with the published version
-range.
+compile, deploy, write, read, and receipt handling. The lockfile installs the
+published `shell-sdk@0.13.0` package, so a standalone checkout can install and
+compile without a sibling SDK repository.
+
+### Node compatibility
+
+The published SDK 0.13.0 signs V1 transactions. Current node source expects V2,
+so compilation and browser builds do not establish deploy/mint compatibility.
+Use a compatible SDK and node pair before running the transaction flow; a
+compatible public SDK release is still required for that standalone path.
+
+For source development, build a compatible SDK in a sibling checkout and then
+replace only the local installed dependency, preserving the committed lockfile:
+
+```bash
+npm ci
+npm install --no-save --package-lock=false ../shell-sdk
+```
+
+Record the SDK and node commits used for the smoke run. A source override is
+not evidence that the published-package tutorial passes.
 
 ## Prerequisites
 
