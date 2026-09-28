@@ -10,8 +10,8 @@ import {
 
 const ABI = parseAbi([
   "constructor(string name,string symbol)",
-  "function mint(address to,string uri) returns (uint256 tokenId)",
-  "function ownerOf(uint256 tokenId) view returns (address)",
+  "function mint(bytes32 to,string uri) returns (uint256 tokenId)",
+  "function ownerOf(uint256 tokenId) view returns (bytes32)",
   "function tokenURI(uint256 tokenId) view returns (string)",
   "function totalSupply() view returns (uint256)",
 ]);
@@ -141,7 +141,7 @@ export default function App() {
         <header className="topbar">
           <div>
             <h1>Shell NFT DAPP</h1>
-            <p>Deploy and mint a Shell-native NFT with Solidity address owners.</p>
+            <p>Deploy and mint a Shell-native NFT with full 32-byte owners.</p>
           </div>
           <span className={busy ? "status busy" : "status"}>{busy ? "Working" : "Ready"}</span>
         </header>

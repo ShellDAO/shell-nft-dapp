@@ -3,9 +3,9 @@ import { parseAbi } from "viem";
 
 export const shellNftAbi = parseAbi([
   "constructor(string name,string symbol)",
-  "event TransferShell(address indexed from,address indexed to,uint256 indexed tokenId)",
-  "function mint(address to,string uri) returns (uint256 tokenId)",
-  "function ownerOf(uint256 tokenId) view returns (address)",
+  "event TransferShell(bytes32 indexed from,bytes32 indexed to,uint256 indexed tokenId)",
+  "function mint(bytes32 to,string uri) returns (uint256 tokenId)",
+  "function ownerOf(uint256 tokenId) view returns (bytes32)",
   "function tokenURI(uint256 tokenId) view returns (string)",
   "function totalSupply() view returns (uint256)",
   "function name() view returns (string)",
