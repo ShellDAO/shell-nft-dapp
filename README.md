@@ -48,8 +48,12 @@ shell-node run \
   --block-time 2000 \
   --max-idle-interval 0 \
   --network dev \
+  --db rocksdb \
   --rpc-api eth,net,web3,shell
 ```
+
+The `--db rocksdb` setting keeps deployments and tokens in `shell-data` across
+node restarts. Dev mode otherwise selects an ephemeral in-memory database.
 
 ## Setup
 
