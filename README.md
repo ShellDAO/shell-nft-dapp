@@ -3,8 +3,9 @@
 A reproducible Shell-native NFT dApp for testing Shell Chain smart contract deployment and interaction.
 
 This example stores Shell-native owners as Solidity `bytes32`, preserving all
-32 bytes of their canonical address. Standard Solidity `address` is 20 bytes;
-SDK encoding cannot widen the compiler's address decoder or storage layout.
+32 bytes of their canonical address. This example retains its existing
+`bytes32` ABI. For new contracts using Solidity `address`, compile with the
+SDK's `target: "pqvm"` option for Shell-native address semantics.
 The contract targets Cancun instructions supported by the node.
 
 The example ABI uses `mint(bytes32,string)`, `ownerOf(uint256) returns (bytes32)`
@@ -13,26 +14,21 @@ change; contracts compiled with the earlier `address` owner ABI are incompatible
 
 The scripts and browser UI use the public `shell-sdk/contracts` APIs for
 compile, deploy, write, read, and receipt handling. The lockfile installs the
-published `shell-sdk@0.13.0` package, so a standalone checkout can install and
-compile without a sibling SDK repository.
+published `shell-sdk@0.14.0-rc.2` package for V2 transaction signing and can
+install, compile, deploy, and mint without a sibling SDK checkout.
 
 ### Node compatibility
 
-The published SDK 0.13.0 signs V1 transactions. Current node source expects V2,
-so compilation and browser builds do not establish deploy/mint compatibility.
-Use a compatible SDK and node pair before running the transaction flow; a
-compatible public SDK release is still required for that standalone path.
+Use the public [Shell Chain 0.27.10 release](https://github.com/ShellDAO/shell-chain/releases/tag/v0.27.10)
+with the SDK version pinned in the lockfile. The older SDK 0.13.0 signs V1
+transactions and fails signature verification against this V2 node.
 
-For source development, build a compatible SDK in a sibling checkout and then
-replace only the local installed dependency, preserving the committed lockfile:
-
-```bash
-npm ci
-npm install --no-save --package-lock=false ../shell-sdk
-```
-
-Record the SDK and node commits used for the smoke run. A source override is
-not evidence that the published-package tutorial passes.
+The CLI and browser flows use the same published SDK. CLI deployment, minting,
+reads, rejected mints and reads after restarting were verified on Node.js 24 and
+macOS arm64, using a full RocksDB development node and an ML-DSA-65 keystore.
+Browser verification covers type checking and the production build. This does
+not establish compatibility with the public testnet's node version or activate
+an upgrade there.
 
 ## Prerequisites
 
